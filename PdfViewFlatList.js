@@ -8,47 +8,37 @@
 
 'use strict';
 import React, {Component} from 'react';
-import {FlatList} from 'react-native';
+import {
+    FlatList,
+} from 'react-native';
 
-/**
- * FlatList wrapper that exposes scrollToXY used by PdfView.
- *
- * Do not `extends FlatList`: under RN 0.8x / Metro interop, the FlatList export
- * is often a plain object (or non-constructable), which throws
- * "Object is not a constructor" while evaluating this module.
- */
 export default class PdfViewFlatList extends Component {
-    _listRef = null;
-
+    /**
+     * Scrolls to a given x, y offset, either immediately or with a smooth animation.
+     *
+     * Example:
+     *
+     * `scrollTo({x: 0, y: 0, animated: true})`
+     *
+     * Note: The weird function signature is due to the fact that, for historical reasons,
+     * the function also accepts separate arguments as an alternative to the options object.
+     * This is deprecated due to ambiguity (y before x), and SHOULD NOT BE USED.
+     */
     scrollToXY = (x, y) => {
-        const list = this._listRef;
-        if (!list) {
-            return;
-        }
-        const scrollRef =
-            list._listRef?._scrollRef ??
-            (typeof list.getScrollResponder === 'function'
-                ? list.getScrollResponder()
-                : null);
-        if (scrollRef && typeof scrollRef.scrollTo === 'function') {
-            scrollRef.scrollTo({x, y, animated: false});
-        }
-    };
+        this._listRef._scrollRef.scrollTo({x: x, y: y, animated: false});
+    }
 
-    scrollToIndex = (params) => {
-        this._listRef?.scrollToIndex?.(params);
-    };
-
-    scrollToOffset = (params) => {
-        this._listRef?.scrollToOffset?.(params);
-    };
+    scrollToIndex(params) {
+        this._flatList.scrollToIndex(params);
+    }
 
     render() {
         return (
             <FlatList
                 {...this.props}
                 ref={(ref) => {
-                    this._listRef = ref;
+                    this._flatList = ref;
+                    this._listRef = ref && ref._listRef;
                 }}
             />
         );
